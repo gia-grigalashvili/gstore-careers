@@ -18,6 +18,7 @@ export default async function AdminApplicationsPage({
 }: AdminPageProps) {
   const params = (await searchParams) ?? {};
   const validSorts = ["recent", "oldest", "az", "za"] as const;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sortValue = params.sort && validSorts.includes(params.sort as any)
     ? (params.sort as "recent" | "oldest" | "az" | "za")
     : "recent";

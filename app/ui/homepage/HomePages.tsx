@@ -1,3 +1,5 @@
+
+
 import Link from "next/link";
 import { fetchVacancies } from "@/actions/vacany";
 
@@ -6,7 +8,7 @@ const shellClass =
 const cardClass =
   "flex flex-col justify-between gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_60px_rgba(12,18,32,0.35)]";
 
-export default async function HomePage() {
+export default async function HomePages() {
   const vacancies = await fetchVacancies();
 
   return (

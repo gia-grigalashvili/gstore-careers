@@ -1,10 +1,10 @@
 
-import HomePage from "./ui/homepage/homepage";
+import HomePages from "./ui/homepage/HomePages";
 
 export default function Home() {
   return (
     <div>
- <HomePage/>
+ <HomePages />
     </div>
   );
 }

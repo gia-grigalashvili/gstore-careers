@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/config/supabaseClient";
+import { supabase } from "@/app/lib/supabaseClient";
 import { Buffer } from "node:buffer";
 
 export type ApplyActionState =

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { ApplicationRecord } from "@/app/actions/applications";
-import type { VacancyRecord } from "@/app/actions/vacany";
+import type { ApplicationRecord } from "@/actions/applications";
+import type { VacancyRecord } from "@/actions/vacany";  
 
 type ApplicationsTableProps = {
   applications: ApplicationRecord[];
