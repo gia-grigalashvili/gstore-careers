@@ -44,17 +44,18 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
       action={formAction}
     >
       <div className="flex flex-col gap-2 text-sm text-white/80">
-        <label htmlFor="name">სახელი და გვარი</label>
+        <label htmlFor="name">სახელი და გვარი *</label>
         <input
           id="name"
           name="name"
           placeholder="მაგ: ანა გიორგაძე"
           required
+          minLength={2}
           className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40"
         />
       </div>
       <div className="flex flex-col gap-2 text-sm text-white/80">
-        <label htmlFor="email">ელფოსტა</label>
+        <label htmlFor="email">ელფოსტა *</label>
         <input
           id="email"
           name="email"
@@ -65,13 +66,17 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
         />
       </div>
       <div className="flex flex-col gap-2 text-sm text-white/80">
-        <label htmlFor="phone">ტელეფონი</label>
+        <label htmlFor="phone">ტელეფონი *</label>
         <input
           id="phone"
           name="phone"
           type="tel"
           placeholder="+995 5XX XX XX XX"
           required
+          minLength={9}
+          maxLength={13}
+          pattern="[\d\s\+\-\(\)]+"
+          title="გთხოვთ შეიყვანოთ სწორი ტელეფონის ნომერი"
           className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40"
         />
       </div>
@@ -99,7 +104,7 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
         </p>
       )}
       <div className="flex flex-col gap-2 text-sm text-white/80">
-        <label htmlFor="resume">CV ატვირთვა (PDF)</label>
+        <label htmlFor="resume">CV ატვირთვა (PDF) *</label>
         <input
           id="resume"
           name="resume"
@@ -126,5 +131,3 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
     </form>
   );
 }
-
-

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ApplicationRecord } from "@/actions/applications";
-import type { VacancyRecord } from "@/actions/vacany";  
+import type { VacancyRecord } from "@/actions/vacany";
 
 type ApplicationsTableProps = {
   applications: ApplicationRecord[];
