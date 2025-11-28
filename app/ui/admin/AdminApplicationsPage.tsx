@@ -1,5 +1,5 @@
 import { ApplicationsTable } from "./ApplicationsTable";
-import { AdminGuard } from "./AdminGuard";
+
 import { fetchApplications } from "@/actions/applications";
 import { fetchVacancies } from "@/actions/vacany";
 
@@ -48,13 +48,13 @@ export default async function AdminApplicationsPage({
         </p>
       </section>
 
-      <AdminGuard>
+    
         <ApplicationsTable
           applications={applications}
           vacancies={vacancies}
           filters={filterValues}
         />
-      </AdminGuard>
+      
     </main>
   );
 }
