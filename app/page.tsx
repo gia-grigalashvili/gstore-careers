@@ -1,10 +1,10 @@
 
-import CareersPage from "./ui/homepage/homepage";
+import HomePage from "./ui/homepage/homepage";
 
 export default function Home() {
   return (
     <div>
- <CareersPage />
+ <HomePage/>
     </div>
   );
 }

@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { fetchVacancies } from "./actions/vacany";
+import { fetchVacancies } from "@/actions/vacany";
 
 const shellClass =
   "mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 sm:py-12 lg:py-16";
 const cardClass =
   "flex flex-col justify-between gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_60px_rgba(12,18,32,0.35)]";
 
-export default async function Home() {
+export default async function HomePage() {
   const vacancies = await fetchVacancies();
 
   return (

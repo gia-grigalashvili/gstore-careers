@@ -1,11 +1,15 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_SUPABASE_API_URL;
+const supabaseKey = process.env.NEXT_SUPABASE_API_KEY;
 
-// Client-side Supabase client (browser-ში გამოიყენება)
-export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false // არ გვჭირდება auth ამ პროექტში
-  }
-})
+if (!supabaseUrl) {
+  throw new Error('Missing NEXT_SUPABASE_API_URL environment variable.');
+}
+
+if (!supabaseKey) {
+  throw new Error('Missing NEXT_SUPABASE_API_KEY environment variable.');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
