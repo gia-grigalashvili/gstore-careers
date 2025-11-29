@@ -11,19 +11,24 @@ type AdminGuardProps = {
 
 export function AdminGuard({ children }: AdminGuardProps) {
   const router = useRouter();
+  const [isAuthed, setIsAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const isAuthed =
-      typeof window !== "undefined" &&
-      window.localStorage.getItem(ADMIN_FLAG_KEY) === "true";
-
-    if (!isAuthed) {
-      router.replace("/admin");
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+    const checkAuth = () => {
+      if (typeof window !== "undefined") {
+        const authFlag = window.localStorage.getItem(ADMIN_FLAG_KEY) === "true";
+        
+        if (!authFlag) {
+          router.replace("/admin");
+        } else {
+          setIsAuthed(true);
+        }
+      }
       setChecking(false);
-    }
+    };
+
+    checkAuth();
   }, [router]);
 
   if (checking) {
@@ -32,6 +37,10 @@ export function AdminGuard({ children }: AdminGuardProps) {
         იტვირთება...
       </div>
     );
+  }
+
+  if (!isAuthed) {
+    return null;
   }
 
   return <>{children}</>;

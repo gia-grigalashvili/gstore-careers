@@ -3,6 +3,7 @@ import { ApplicationsTable } from "./ApplicationsTable";
 import { fetchApplications } from "@/actions/applications";
 import { fetchVacancies } from "@/actions/vacany";
 
+
 type AdminPageProps = {
   searchParams?: Promise<{
     vacancyId?: string;
@@ -36,6 +37,7 @@ export default async function AdminApplicationsPage({
   ]);
 
   return (
+    
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-12 lg:py-16 min-h-[calc(100vh-4rem)]">
       <section className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.4em] text-white/50">
@@ -48,14 +50,14 @@ export default async function AdminApplicationsPage({
         </p>
       </section>
 
-    
+   
         <ApplicationsTable
           applications={applications}
           vacancies={vacancies}
           filters={filterValues}
         />
       
+
     </main>
   );
 }
-

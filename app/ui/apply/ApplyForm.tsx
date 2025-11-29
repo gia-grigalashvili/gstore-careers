@@ -1,124 +1,158 @@
 'use client';
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { submitApplication, ApplyActionState } from "@/actions/apply";
 import type { VacancyRecord } from "@/actions/vacany";
-import { useEffect, useState } from "react";
 
 type ApplyFormProps = {
   vacancy?: VacancyRecord;
 };
 
-type FieldErrors = {
-  name?: string;
-  email?: string;
-  phone?: string;
-  resume?: string;
+type FieldErrors = Record<string, string>;
+
+const VALIDATION_RULES = {
+  name: {
+    required: "სახელი და გვარი სავალდებულოა",
+    minLength: { value: 2, message: "სახელი უნდა შედგებოდეს მინიმუმ 2 სიმბოლოსგან" }
+  },
+  email: {
+    required: "ელფოსტა სავალდებულოა",
+    pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "არასწორი ელფოსტის ფორმატი" }
+  },
+  phone: {
+    required: "ტელეფონი სავალდებულოა",
+    minLength: { value: 9, message: "ტელეფონი უნდა შედგებოდეს მინიმუმ 9 სიმბოლოსგან" },
+    pattern: { value: /^[\d\s+\-()]+$/, message: "არასწორი ტელეფონის ფორმატი" }
+  },
+  resume: {
+    required: "CV-ის ატვირთვა სავალდებულოა",
+    fileType: { value: "application/pdf", message: "მხოლოდ PDF ფაილები დაშვებულია" },
+    maxSize: { value: 10 * 1024 * 1024, message: "ფაილის ზომა არ უნდა აღემატებოდეს 10MB-ს" }
+  }
 };
 
 function SubmitButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
+  
   return (
     <button
-      className="inline-flex w-full items-center justify-center rounded-full bg-[#3A6FF8] px-6 py-3 text-sm font-semibold text-white shadow-[0_15px_30px_rgba(58,111,248,0.35)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
       type="submit"
       disabled={pending || disabled}
+      className="inline-flex w-full items-center justify-center rounded-full bg-[#3A6FF8] px-6 py-3 text-sm font-semibold text-white shadow-[0_15px_30px_rgba(58,111,248,0.35)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? "გზავნა..." : "განაცხადის გაგზავნა"}
     </button>
   );
 }
 
-export function ApplyForm({ vacancy }: ApplyFormProps) {
-  const initialState: ApplyActionState = { status: "idle" };
-  const [state, formAction, isPending] = useActionState(
-    submitApplication,
-    initialState
+function FormField({ 
+  label, 
+  name, 
+  error, 
+  touched, 
+  children 
+}: { 
+  label: string; 
+  name: string; 
+  error?: string; 
+  touched?: boolean; 
+  children: React.ReactNode; 
+}) {
+  return (
+    <div className="flex flex-col gap-2 text-sm text-white/80">
+      <label htmlFor={name}>{label}</label>
+      {children}
+      {touched && error && (
+        <p className="text-xs text-red-300">{error}</p>
+      )}
+    </div>
   );
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+}
+
+function useFormValidation() {
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    if (state.status === "success") {
-      const form = document.getElementById("apply-form") as HTMLFormElement | null;
-      form?.reset();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFieldErrors({});
-      setTouched({});
-    }
-  }, [state.status]);
+  const validateField = (name: string, value: string, files?: FileList | null): string => {
+    const rules = VALIDATION_RULES[name as keyof typeof VALIDATION_RULES];
+    if (!rules) return "";
 
-  const validateField = (name: string, value: string, files?: FileList | null) => {
-    let error = "";
-
-    switch (name) {
-      case "name":
-        if (!value.trim()) {
-          error = "სახელი და გვარი სავალდებულოა";
-        } else if (value.trim().length < 2) {
-          error = "სახელი უნდა შედგებოდეს მინიმუმ 2 სიმბოლოსგან";
-        }
-        break;
-      case "email":
-        if (!value.trim()) {
-          error = "ელფოსტა სავალდებულოა";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          error = "არასწორი ელფოსტის ფორმატი";
-        }
-        break;
-      case "phone":
-        if (!value.trim()) {
-          error = "ტელეფონი სავალდებულოა";
-        } else if (value.trim().length < 9) {
-          error = "ტელეფონი უნდა შედგებოდეს მინიმუმ 9 სიმბოლოსგან";
-        } else if (!/^[\d\s+\-()]+$/.test(value)) {
-          error = "არასწორი ტელეფონის ფორმატი";
-        }
-        break;
-      case "resume":
-        if (files && files.length > 0) {
-          const file = files[0];
-          if (file.type !== "application/pdf") {
-            error = "მხოლოდ PDF ფაილები დაშვებულია";
-          } else if (file.size > 10 * 1024 * 1024) {
-            error = "ფაილის ზომა არ უნდა აღემატებოდეს 10MB-ს";
-          }
-        } else if (!files || files.length === 0) {
-          error = "CV-ის ატვირთვა სავალდებულოა";
-        }
-        break;
+    // Required validation
+    if ('required' in rules && !value.trim() && (!files || files.length === 0)) {
+      return rules.required;
     }
 
-    setFieldErrors((prev) => ({
-      ...prev,
-      [name]: error,
-    }));
+    // Min length validation
+    if ('minLength' in rules && value.trim().length < rules.minLength.value) {
+      return rules.minLength.message;
+    }
 
-    return error;
+    // Pattern validation
+    if ('pattern' in rules && value && !rules.pattern.value.test(value)) {
+      return rules.pattern.message;
+    }
+
+    // File validation
+    if (name === 'resume' && files && files.length > 0) {
+      const file = files[0];
+      if ('fileType' in rules && file.type !== rules.fileType.value) {
+        return rules.fileType.message;
+      }
+      if ('maxSize' in rules && file.size > rules.maxSize.value) {
+        return rules.maxSize.message;
+      }
+    }
+
+    return "";
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
-    setTouched((prev) => ({ ...prev, [name]: true }));
-    validateField(name, value, files);
+    setTouched(prev => ({ ...prev, [name]: true }));
+    const error = validateField(name, value, files);
+    setErrors(prev => ({ ...prev, [name]: error }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
     if (touched[name]) {
-      validateField(name, value, files);
+      const error = validateField(name, value, files);
+      setErrors(prev => ({ ...prev, [name]: error }));
     }
   };
 
+  const reset = () => {
+    setErrors({});
+    setTouched({});
+  };
+
+  return { errors, touched, handleBlur, handleChange, reset };
+}
+
+export function ApplyForm({ vacancy }: ApplyFormProps) {
+  const initialState: ApplyActionState = { status: "idle" };
+  const [state, formAction, isPending] = useActionState(submitApplication, initialState);
+  const { errors, touched, handleBlur, handleChange, reset } = useFormValidation();
+
+  useEffect(() => {
+    if (state.status === "success") {
+      const form = document.getElementById("apply-form") as HTMLFormElement | null;
+      form?.reset();
+      reset();
+    }
+  }, [state.status, reset]);
+
+  const getInputClassName = (fieldName: string) => 
+    `rounded-2xl border ${
+      touched[fieldName] && errors[fieldName]
+        ? "border-red-400/60 bg-red-500/10"
+        : "border-white/15 bg-white/5"
+    } px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40`;
+
   return (
-    <form
-      id="apply-form"
-      className="space-y-5"
-      action={formAction}
-    >
-      <div className="flex flex-col gap-2 text-sm text-white/80">
-        <label htmlFor="name">სახელი და გვარი *</label>
+    <form id="apply-form" className="space-y-5" action={formAction}>
+      <FormField label="სახელი და გვარი *" name="name" error={errors.name} touched={touched.name}>
         <input
           id="name"
           name="name"
@@ -127,18 +161,11 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           minLength={2}
           onBlur={handleBlur}
           onChange={handleChange}
-          className={`rounded-2xl border ${
-            touched.name && fieldErrors.name
-              ? "border-red-400/60 bg-red-500/10"
-              : "border-white/15 bg-white/5"
-          } px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40`}
+          className={getInputClassName('name')}
         />
-        {touched.name && fieldErrors.name && (
-          <p className="text-xs text-red-300">{fieldErrors.name}</p>
-        )}
-      </div>
-      <div className="flex flex-col gap-2 text-sm text-white/80">
-        <label htmlFor="email">ელფოსტა *</label>
+      </FormField>
+
+      <FormField label="ელფოსტა *" name="email" error={errors.email} touched={touched.email}>
         <input
           id="email"
           name="email"
@@ -147,18 +174,11 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           required
           onBlur={handleBlur}
           onChange={handleChange}
-          className={`rounded-2xl border ${
-            touched.email && fieldErrors.email
-              ? "border-red-400/60 bg-red-500/10"
-              : "border-white/15 bg-white/5"
-          } px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40`}
+          className={getInputClassName('email')}
         />
-        {touched.email && fieldErrors.email && (
-          <p className="text-xs text-red-300">{fieldErrors.email}</p>
-        )}
-      </div>
-      <div className="flex flex-col gap-2 text-sm text-white/80">
-        <label htmlFor="phone">ტელეფონი *</label>
+      </FormField>
+
+      <FormField label="ტელეფონი *" name="phone" error={errors.phone} touched={touched.phone}>
         <input
           id="phone"
           name="phone"
@@ -168,19 +188,12 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           minLength={9}
           maxLength={13}
           pattern="[\d\s\+\-\(\)]+"
-          title="გთხოვთ შეიყვანოთ სწორი ტელეფონის ნომერი"
           onBlur={handleBlur}
           onChange={handleChange}
-          className={`rounded-2xl border ${
-            touched.phone && fieldErrors.phone
-              ? "border-red-400/60 bg-red-500/10"
-              : "border-white/15 bg-white/5"
-          } px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40`}
+          className={getInputClassName('phone')}
         />
-        {touched.phone && fieldErrors.phone && (
-          <p className="text-xs text-red-300">{fieldErrors.phone}</p>
-        )}
-      </div>
+      </FormField>
+
       {vacancy ? (
         <div className="flex flex-col gap-2 text-sm text-white/80">
           <label htmlFor="vacancyDisplay">ვაკანსია</label>
@@ -190,11 +203,7 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
             readOnly
             className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-base text-white"
           />
-          <input
-            type="hidden"
-            name="vacancyId"
-            value={String(vacancy.id)}
-          />
+          <input type="hidden" name="vacancyId" value={String(vacancy.id)} />
           <p className="text-xs text-white/60">
             {vacancy.role || vacancy.name} — განაცხადი გადაიგზავნება ამ პოზიციაზე.
           </p>
@@ -204,8 +213,8 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           ვერ მოიძებნა ვაკანსია. დაბრუნდი კარიერის გვერდზე და აირჩიე კონკრეტული როლი.
         </p>
       )}
-      <div className="flex flex-col gap-2 text-sm text-white/80">
-        <label htmlFor="resume">CV ატვირთვა (PDF) *</label>
+
+      <FormField label="CV ატვირთვა (PDF) *" name="resume" error={errors.resume} touched={touched.resume}>
         <input
           id="resume"
           name="resume"
@@ -215,27 +224,24 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           onBlur={handleBlur}
           onChange={handleChange}
           className={`rounded-2xl border border-dashed ${
-            touched.resume && fieldErrors.resume
+            touched.resume && errors.resume
               ? "border-red-400/60 bg-red-500/10"
               : "border-white/25 bg-transparent"
           } px-4 py-6 text-base text-white file:mr-4 file:rounded-full file:border-0 file:bg-[#3A6FF8] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:border-white/60`}
         />
         <p className="text-xs text-white/60">მხოლოდ PDF, მაქს. 10MB.</p>
-        {touched.resume && fieldErrors.resume && (
-          <p className="text-xs text-red-300">{fieldErrors.resume}</p>
-        )}
-      </div>
+      </FormField>
+
       {state.status !== "idle" && (
-        <p
-          className={
-            state.status === "success"
-              ? "rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100"
-              : "rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-100"
-          }
-        >
+        <p className={
+          state.status === "success"
+            ? "rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100"
+            : "rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-100"
+        }>
           {state.message}
         </p>
       )}
+
       <SubmitButton disabled={!vacancy} />
       {isPending && <p className="text-xs text-white/60">მონაცემები იგზავნება…</p>}
     </form>

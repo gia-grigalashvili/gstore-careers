@@ -1,6 +1,6 @@
-// lib/types.ts
 
 export interface Vacancy {
+  role: string;
   id: string;
   title: string;
   description: string;

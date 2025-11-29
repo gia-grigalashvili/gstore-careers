@@ -1,6 +1,5 @@
-
-import AdminApplicationsPage from "@/app/ui/admin/AdminApplicationsPage";
+import AdminLoginPage from "@/app/ui/admin/AdminLoginPage";
 
 export default function Page() {
-  return <AdminApplicationsPage />;
+  return <AdminLoginPage />;
 }

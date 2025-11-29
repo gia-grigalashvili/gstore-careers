@@ -1,66 +1,84 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import VacancySearchFilter from "../components/VacancySearchFilter";
-import { fetchVacancies } from "@/actions/vacany";
+import { useState, useEffect, useCallback } from 'react';
+import VacancySearchFilter from '../components/VacancySearchFilter';
+import { EmptyState } from '../components/EmptyState';
+import { VacancyCard } from '../components/VacancyCard';
+import { Pagination } from '../components/Pagination';
+import { usePagination } from '@/app/lib/usePagination';
+import { fetchVacancies } from '@/actions/vacany';
+import type { Vacancy } from '@/app/lib/actionAdminTypes';
 
-const shellClass =
-  "mx-auto flex w-full max-w-6xl flex-col gap-16 px-4 py-12 sm:px-6 lg:py-20";
-
-interface Vacancy {
-  id: string;
-  role: string;
-  description: string;
-  type?: string;
-  avarage_review_time?: string;
-}
+const ITEMS_PER_PAGE = 2;
 
 export default function HomePage() {
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [filteredVacancies, setFilteredVacancies] = useState<Vacancy[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch vacancies on component mount
+  const { currentPage, totalPages, currentItems, goToPage, reset } = usePagination(
+    filteredVacancies,
+    ITEMS_PER_PAGE
+  );
+
+ 
   useEffect(() => {
+    let isMounted = true;
+
     const loadVacancies = async () => {
       try {
         setLoading(true);
+        setError(null);
         const data = await fetchVacancies();
-        const vacanciesToSet = data || [];
-        setVacancies(vacanciesToSet);
-        setFilteredVacancies(vacanciesToSet);
-      } catch (error) {
-        console.error("Failed to fetch vacancies:", error);
-        setVacancies([]);
-        setFilteredVacancies([]);
+        
+        if (isMounted) {
+          setVacancies(data as unknown as Vacancy[] || []);
+          setFilteredVacancies(data as unknown as Vacancy[] || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch vacancies:', err);
+        if (isMounted) {
+          setError('ვერ მოხერხდა ვაკანსიების ჩატვირთვა');
+          setVacancies([]);
+          setFilteredVacancies([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadVacancies();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Handle filtered results from search component
-  const handleFilteredResults = (filtered: Vacancy[]) => {
+  const handleFilteredResults = useCallback((filtered: Vacancy[]) => {
     setFilteredVacancies(filtered);
-  };
+    reset();
+  }, [reset]);
+
+  const hasVacancies = filteredVacancies.length > 0;
+  const showPagination = totalPages > 1;
 
   return (
-    <main className={shellClass}>
-      {/* Hero Section */}
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-4 py-12 sm:px-6 lg:py-20">
+      
       <section className="space-y-6 text-center">
         <div className="inline-flex items-center gap-2 rounded-full bg-[#3A6FF8]/10 px-4 py-2 text-xs font-medium tracking-wider text-[#3A6FF8]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#3A6FF8]"></span>
+          <span className="h-1.5 w-1.5 rounded-full bg-[#3A6FF8]" aria-hidden="true" />
           შემოუერთდი გუნდს
         </div>
         
         <h1 className="mx-auto max-w-3xl text-3xl font-bold leading-tight text-white sm:text-4xl md:text-5xl">
-          კარიერა, სადაც{" "}
+          კარიერა, სადაც{' '}
           <span className="bg-linear-to-r from-[#F5C96B] to-[#3A6FF8] bg-clip-text text-transparent">
             პროდუქტი და ადამიანები
-          </span>{" "}
+          </span>{' '}
           თანაბრად მნიშვნელოვანია
         </h1>
         
@@ -86,86 +104,68 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Search & Filter Component */}
-        {!loading && (
+      
+        {!loading && !error && (
           <VacancySearchFilter
             vacancies={vacancies}
             onFilteredResults={handleFilteredResults}
           />
         )}
 
-        {/* Loading State */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#3A6FF8] border-t-transparent"></div>
-          </div>
-        ) : (
-          /* Vacancies Grid */
-          <div className="grid gap-6 sm:grid-cols-2 lg:gap-8">
-            {filteredVacancies.length === 0 ? (
-              <article className="col-span-full rounded-2xl border border-white/5 bg-white/2 p-8 text-center backdrop-blur-sm">
-                <div className="mx-auto max-w-md space-y-3">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#3A6FF8]/10">
-                    <svg className="h-6 w-6 text-[#3A6FF8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white">
-                    {vacancies.length === 0 ? "ვაკანსიები მალე განახლდება" : "ვაკანსია ვერ მოიძებნა"}
-                  </h3>
-                  <p className="text-sm text-[#DDE2E9]/50">
-                    {vacancies.length === 0 
-                      ? "როგორც კი ახალი როლი დაემატება, ავტომატურად გამოჩნდება ამ გვერდზე"
-                      : "სცადეთ სხვა ფილტრები ან გაასუფთავეთ ძებნა"
-                    }
-                  </p>
-                </div>
-              </article>
-            ) : (
-              filteredVacancies.map((vacancy) => (
-                <article 
-                  key={vacancy.id}
-                  className="group flex flex-col justify-between gap-6 rounded-2xl border border-white/5 bg-linear-to-br from-white/3 to-transparent p-6 backdrop-blur-sm transition-all hover:border-[#3A6FF8]/20 hover:shadow-lg hover:shadow-[#3A6FF8]/5"
-                >
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <h3 className="text-xl font-semibold text-white group-hover:text-[#3A6FF8] transition-colors">
-                        {vacancy.role}
-                      </h3>
-                      {vacancy.type && (
-                        <span className="rounded-full bg-[#3A6FF8]/10 px-2.5 py-1 text-xs font-medium text-[#3A6FF8]">
-                          {vacancy.type}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <p className="text-sm leading-relaxed text-[#DDE2E9]/60">
-                      {vacancy.description}
-                    </p>
-                  </div>
-                  
-                  <div className="flex flex-col gap-3 border-t border-white/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                    <Link
-                      href={`/apply?vacancyId=${vacancy.id}`}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-[#3A6FF8] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#3A6FF8]/90 hover:shadow-lg hover:shadow-[#3A6FF8]/30"
-                    >
-                      გაგზავნე განაცხადი
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </Link>
-                    <span className="text-xs text-[#DDE2E9]/40">
-                      განხილვა: {vacancy.avarage_review_time || "3 სამუშაო დღე"}
-                    </span>
-                  </div>
-                </article>
-              ))
+      
+        {!loading && !error && hasVacancies && (
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <p className="text-sm text-[#DDE2E9]/60">
+              ნაპოვნია <span className="font-semibold text-white">{filteredVacancies.length}</span> ვაკანსია
+            </p>
+            {showPagination && (
+              <p className="text-sm text-[#DDE2E9]/60">
+                გვერდი {currentPage} / {totalPages}
+              </p>
             )}
           </div>
         )}
+
+ 
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#3A6FF8]/20 border-t-[#3A6FF8]" />
+          </div>
+        )}
+
+     
+        {error && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6 text-center">
+            <p className="text-red-400">{error}</p>
+          </div>
+        )}
+
+      
+        {!loading && !error && (
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:gap-8">
+              {currentItems.length === 0 ? (
+                <EmptyState hasVacancies={vacancies.length > 0} />
+              ) : (
+                currentItems.map(vacancy => (
+                  <VacancyCard key={vacancy.id} vacancy={vacancy} />
+                ))
+              )}
+            </div>
+
+            {showPagination && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                className="pt-8"
+              />
+            )}
+          </>
+        )}
       </section>
 
-      {/* Info Note */}
+  
       <div className="rounded-xl border border-[#F5C96B]/10 bg-[#F5C96B]/5 p-4">
         <p className="text-center text-sm text-[#DDE2E9]/60">
           💡 „განაცხადის გაგზავნა&quot; ღილაკი გახსნის სრულ ფორმას, სადაც რეზიუმეს ატვირთავ
