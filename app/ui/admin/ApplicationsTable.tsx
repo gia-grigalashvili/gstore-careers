@@ -91,7 +91,7 @@ export function ApplicationsTable({
     }
   };
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+   
   const csvContent = useMemo(() => {
     if (applications.length === 0) return "";
     const header = ["სახელი", "ელფოსტა", "ვაკანსია", "თარიღი", "რეზიუმე URL"];
@@ -103,6 +103,7 @@ export function ApplicationsTable({
       `"${(app.resume || "").replace(/"/g, '""')}"`,
     ]);
     return [header.join(","), ...rows.map((r) => r.join(","))].join("\n");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applications, vacancies]);
 
   const handleExportCsv = () => {

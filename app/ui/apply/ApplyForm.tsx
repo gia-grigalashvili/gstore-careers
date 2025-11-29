@@ -4,10 +4,17 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { submitApplication, ApplyActionState } from "@/actions/apply";
 import type { VacancyRecord } from "@/actions/vacany";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type ApplyFormProps = {
   vacancy?: VacancyRecord;
+};
+
+type FieldErrors = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  resume?: string;
 };
 
 function SubmitButton({ disabled }: { disabled?: boolean }) {
@@ -29,13 +36,80 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
     submitApplication,
     initialState
   );
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (state.status === "success") {
       const form = document.getElementById("apply-form") as HTMLFormElement | null;
       form?.reset();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFieldErrors({});
+      setTouched({});
     }
   }, [state.status]);
+
+  const validateField = (name: string, value: string, files?: FileList | null) => {
+    let error = "";
+
+    switch (name) {
+      case "name":
+        if (!value.trim()) {
+          error = "სახელი და გვარი სავალდებულოა";
+        } else if (value.trim().length < 2) {
+          error = "სახელი უნდა შედგებოდეს მინიმუმ 2 სიმბოლოსგან";
+        }
+        break;
+      case "email":
+        if (!value.trim()) {
+          error = "ელფოსტა სავალდებულოა";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = "არასწორი ელფოსტის ფორმატი";
+        }
+        break;
+      case "phone":
+        if (!value.trim()) {
+          error = "ტელეფონი სავალდებულოა";
+        } else if (value.trim().length < 9) {
+          error = "ტელეფონი უნდა შედგებოდეს მინიმუმ 9 სიმბოლოსგან";
+        } else if (!/^[\d\s+\-()]+$/.test(value)) {
+          error = "არასწორი ტელეფონის ფორმატი";
+        }
+        break;
+      case "resume":
+        if (files && files.length > 0) {
+          const file = files[0];
+          if (file.type !== "application/pdf") {
+            error = "მხოლოდ PDF ფაილები დაშვებულია";
+          } else if (file.size > 10 * 1024 * 1024) {
+            error = "ფაილის ზომა არ უნდა აღემატებოდეს 10MB-ს";
+          }
+        } else if (!files || files.length === 0) {
+          error = "CV-ის ატვირთვა სავალდებულოა";
+        }
+        break;
+    }
+
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
+
+    return error;
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value, files } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    validateField(name, value, files);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, files } = e.target;
+    if (touched[name]) {
+      validateField(name, value, files);
+    }
+  };
 
   return (
     <form
@@ -51,8 +125,17 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           placeholder="მაგ: ანა გიორგაძე"
           required
           minLength={2}
-          className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40"
+          onBlur={handleBlur}
+          onChange={handleChange}
+          className={`rounded-2xl border ${
+            touched.name && fieldErrors.name
+              ? "border-red-400/60 bg-red-500/10"
+              : "border-white/15 bg-white/5"
+          } px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40`}
         />
+        {touched.name && fieldErrors.name && (
+          <p className="text-xs text-red-300">{fieldErrors.name}</p>
+        )}
       </div>
       <div className="flex flex-col gap-2 text-sm text-white/80">
         <label htmlFor="email">ელფოსტა *</label>
@@ -62,8 +145,17 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           type="email"
           placeholder="ana@gstore.com"
           required
-          className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40"
+          onBlur={handleBlur}
+          onChange={handleChange}
+          className={`rounded-2xl border ${
+            touched.email && fieldErrors.email
+              ? "border-red-400/60 bg-red-500/10"
+              : "border-white/15 bg-white/5"
+          } px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40`}
         />
+        {touched.email && fieldErrors.email && (
+          <p className="text-xs text-red-300">{fieldErrors.email}</p>
+        )}
       </div>
       <div className="flex flex-col gap-2 text-sm text-white/80">
         <label htmlFor="phone">ტელეფონი *</label>
@@ -77,8 +169,17 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           maxLength={13}
           pattern="[\d\s\+\-\(\)]+"
           title="გთხოვთ შეიყვანოთ სწორი ტელეფონის ნომერი"
-          className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40"
+          onBlur={handleBlur}
+          onChange={handleChange}
+          className={`rounded-2xl border ${
+            touched.phone && fieldErrors.phone
+              ? "border-red-400/60 bg-red-500/10"
+              : "border-white/15 bg-white/5"
+          } px-4 py-3 text-base text-white placeholder-white/50 focus:border-[#3A6FF8] focus:outline-none focus:ring-2 focus:ring-[#3A6FF8]/40`}
         />
+        {touched.phone && fieldErrors.phone && (
+          <p className="text-xs text-red-300">{fieldErrors.phone}</p>
+        )}
       </div>
       {vacancy ? (
         <div className="flex flex-col gap-2 text-sm text-white/80">
@@ -111,9 +212,18 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           type="file"
           accept="application/pdf"
           required
-          className="rounded-2xl border border-dashed border-white/25 bg-transparent px-4 py-6 text-base text-white file:mr-4 file:rounded-full file:border-0 file:bg-[#3A6FF8] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:border-white/60"
+          onBlur={handleBlur}
+          onChange={handleChange}
+          className={`rounded-2xl border border-dashed ${
+            touched.resume && fieldErrors.resume
+              ? "border-red-400/60 bg-red-500/10"
+              : "border-white/25 bg-transparent"
+          } px-4 py-6 text-base text-white file:mr-4 file:rounded-full file:border-0 file:bg-[#3A6FF8] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:border-white/60`}
         />
         <p className="text-xs text-white/60">მხოლოდ PDF, მაქს. 10MB.</p>
+        {touched.resume && fieldErrors.resume && (
+          <p className="text-xs text-red-300">{fieldErrors.resume}</p>
+        )}
       </div>
       {state.status !== "idle" && (
         <p
