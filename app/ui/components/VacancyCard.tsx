@@ -9,7 +9,7 @@ export function VacancyCard({ vacancy }: VacancyCardProps) {
   const vacancyIdForUrl = String(vacancy.id);
 
   return (
-    <article className="group flex flex-col justify-between gap-6 rounded-2xl border border-white/5 bg-gradient-to-br from-white/3 to-transparent p-6 backdrop-blur-sm transition-all hover:border-[#3A6FF8]/20 hover:shadow-lg hover:shadow-[#3A6FF8]/5">
+    <article className="group flex flex-col justify-between gap-6 rounded-2xl border border-white/5 bg-linear-to-br from-white/3 to-transparent p-6 backdrop-blur-sm transition-all hover:border-[#3A6FF8]/20 hover:shadow-lg hover:shadow-[#3A6FF8]/5">
       <div className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <h3 className="text-xl font-semibold text-white group-hover:text-[#3A6FF8] transition-colors">

@@ -15,8 +15,8 @@ const VALIDATION_RULES = {
   },
   phone: {
     required: "ტელეფონი სავალდებულოა",
-    minLength: { value: 9, message: "ტელეფონი უნდა შედგებოდეს მინიმუმ 9 სიმბოლოსგან" },
-    pattern: { value: /^[\d\s+\-()]+$/, message: "არასწორი ტელეფონის ფორმატი" }
+    minLength: { value: 13, message: "ტელეფონი უნდა შედგებოდეს 9 ციფრისგან" },
+    pattern: { value: /^\+995\s\d{9}$/, message: "ფორმატი: +995 5XXXXXXXX" }
   },
   resume: {
     required: "CV-ის ატვირთვა სავალდებულოა",
@@ -58,6 +58,25 @@ export function useFormValidation() {
     return "";
   };
 
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    
+    // Always start with +995
+    if (digits.length === 0) return '+995 ';
+    
+    // If user tries to delete +995, prevent it
+    if (!value.startsWith('+995')) return '+995 ';
+    
+    // Extract only the digits after 995
+    const afterPrefix = digits.slice(3);
+    
+    // Limit to 9 digits after +995
+    const limitedDigits = afterPrefix.slice(0, 9);
+    
+    return `+995 ${limitedDigits}`;
+  };
+
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
     setTouched(prev => ({ ...prev, [name]: true }));
@@ -67,6 +86,13 @@ export function useFormValidation() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
+    
+    // Special handling for phone number
+    if (name === 'phone') {
+      const formatted = formatPhoneNumber(value);
+      e.target.value = formatted;
+    }
+    
     if (touched[name]) {
       const error = validateField(name, value, files);
       setErrors(prev => ({ ...prev, [name]: error }));

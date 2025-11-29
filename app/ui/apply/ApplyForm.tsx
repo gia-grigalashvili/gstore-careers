@@ -66,11 +66,11 @@ export function ApplyForm({ vacancy }: ApplyFormProps) {
           id="phone"
           name="phone"
           type="tel"
-          placeholder="+995 5XX XX XX XX"
+          placeholder="+995 5XXXXXXXX"
+          defaultValue="+995 "
           required
-          minLength={9}
-          maxLength={13}
-          pattern="[\d\s\+\-\(\)]+"
+          minLength={14}
+          maxLength={14}
           onBlur={handleBlur}
           onChange={handleChange}
           className={getInputClassName('phone')}
