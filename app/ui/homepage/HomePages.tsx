@@ -9,7 +9,7 @@ import { usePagination } from '@/app/lib/usePagination';
 import { fetchVacancies } from '@/actions/vacany';
 import type { Vacancy } from '@/app/lib/actionAdminTypes';
 
-const ITEMS_PER_PAGE = 2;
+const ITEMS_PER_PAGE = 6;
 
 export default function HomePage() {
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
