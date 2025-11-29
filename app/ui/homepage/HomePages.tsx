@@ -84,12 +84,12 @@ export default function HomePage() {
         
         <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#DDE2E9]/70 sm:text-lg">
           ვქმნით თანამედროვე, მონაცემებზე დაფუძნებულ retail გამოცდილებებს. 
-          თუ გიყვარს სისუფთავე კოდი, სტრუქტურა და მომხმარებლის რეალური 
+          თუ ხარ მონდომებული, გსურს კარგ ჯგუფთან ერთად მუშაობა და  რეალური 
           პრობლემების გადაჭრა — ქვემოთ შენი მომავალი პოზიცია გელოდება.
         </p>
       </section>
 
-      {/* Vacancies Section */}
+     
       <section id="vacancies" className="space-y-8">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-[#DDE2E9]/40">

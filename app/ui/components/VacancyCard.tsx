@@ -26,7 +26,7 @@ export function VacancyCard({ vacancy }: VacancyCardProps) {
           href={`/apply?vacancyId=${vacancyIdForUrl}`}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-[#3A6FF8] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#3A6FF8]/90 hover:shadow-lg hover:shadow-[#3A6FF8]/30"
         >
-          <span>მაგზავნე განაცხადი</span>
+          <span>გამოგზავნე განცხადება</span>
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
